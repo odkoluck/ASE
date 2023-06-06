@@ -1,0 +1,25 @@
+#version: '3'
+#services:
+#  mongodb:
+#    image: mongo
+#    container_name: feedback-mongo
+#    ports:
+#      - "27017:27017"
+
+#  rabbitmq:
+#    image: rabbitmq:3.11-management
+#    container_name: feedback-rabbitmq
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"
+
+#  feedback:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    container_name: feedback-service
+#    ports:
+#      - "8083:8083"
+#    depends_on:
+#      - mongodb
+#      - rabbitmq

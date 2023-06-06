@@ -1,0 +1,16 @@
+server:
+  port: 8088
+  
+spring:
+  data:
+    mongodb:
+      database: Bookmarks
+      host: bookmarking-mongodb
+      port: 27017
+
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    template:
+      exchange: bookmark.exchange
+      routing-key: bookmark.created

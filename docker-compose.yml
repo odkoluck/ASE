@@ -1,0 +1,318 @@
+version: "3.8"
+services:
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - local
+
+  angular:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: always
+    ports:
+      - "4200:4200"
+    networks:
+      - local
+
+  tagging-mongodb:
+    image: mongo:6.0.6
+    container_name: tagging-mongodb
+    ports:
+      - "27019:27017"
+    restart: always
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  taggingservice:
+    build:
+      context: ./TaggingService
+      dockerfile: Dockerfile
+    container_name: taggingservice
+    restart: always
+    ports:
+      - "8087:8087"
+    depends_on:
+      - tagging-mongodb
+    links:
+      - tagging-mongodb
+    networks:
+      - local
+
+  bookmarking-mongodb:
+    image: mongo:6.0.6
+    container_name: bookmarking-mongodb
+    ports:
+      - "27020:27017"
+    restart: always
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  bookmarkingservice:
+    build:
+      context: ./BookmarkingService
+      dockerfile: Dockerfile
+    container_name: bookmarkingservice
+    restart: always
+    ports:
+      - "8088:8088"
+    depends_on:
+      - bookmarking-mongodb
+    links:
+      - bookmarking-mongodb
+    networks:
+      - local
+
+  recommender-mongodb:
+    image: mongo:6.0.6
+    container_name: recommender-mongodb
+    ports:
+      - "27021:27017"
+    restart: always
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  recommenderservice:
+    build:
+      context: ./RecommenderService
+      dockerfile: Dockerfile
+    container_name: recommenderservice
+    restart: always
+    ports:
+      - "8089:8089"
+    depends_on:
+      - recommender-mongodb
+    links:
+      - recommender-mongodb
+    networks:
+      - local
+
+  eventmongodb:
+    image: mongo:6.0.6
+    container_name: eventmongodb
+    ports:
+      - "27018:27017"
+    restart: always
+    volumes:
+      - data:/data
+    networks:
+      - local
+  loginmongodb:
+    image: mongo:6.0.6
+    container_name: loginmongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - data:/data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=rootuser
+      - MONGO_INITDB_ROOT_PASSWORD=rootpass
+    networks:
+      - local
+
+  feedback-mongodb:
+    image: mongo:6.0.6
+    container_name: feedback-mongodb
+    restart: always
+    ports:
+      - "27022:27017"
+    networks:
+      - local
+
+
+  search-mongo:
+    image: mongo:6.0.6
+    container_name: search-mongo
+    ports:
+      - "27023:27017"
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  exportmongodb:
+    image: mongo:6.0.6
+    container_name: exportmongodb
+    ports:
+      - "27024:27017"
+    restart: always
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  export-ms:
+    build:
+      context: ./ExportService
+      dockerfile: Dockerfile
+    container_name: export-ms
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - exportmongodb
+    links:
+      - exportmongodb
+    networks:
+      - local
+
+  analyticsmongodb:
+    image: mongo:6.0.6
+    container_name: analyticsmongodb
+    ports:
+      - "27025:27017"
+    restart: always
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  analytics-ms:
+    build:
+      context: ./AnalyticsService
+      dockerfile: Dockerfile
+    container_name: analytics-ms
+    restart: always
+    ports:
+      - "8081:8081"
+    depends_on:
+      - analyticsmongodb
+    links:
+      - analyticsmongodb
+    networks:
+      - local
+
+  login:
+    build:
+      context: ./LoginService
+      dockerfile: Dockerfile
+    container_name: loginService
+    restart: always
+    ports:
+      - "8085:8085"
+    depends_on:
+      - loginmongodb
+    links:
+      - loginmongodb
+    networks:
+      - local
+  event:
+    build:
+      context: ./EventService
+      dockerfile: Dockerfile
+    container_name: eventService
+    restart: always
+    ports:
+      - "8086:8086"
+    depends_on:
+      - eventmongodb
+    links:
+      - eventmongodb
+    networks:
+      - local
+
+  feedback:
+    build:
+      context: ./FeedbackService
+      dockerfile: Dockerfile
+    container_name: feedback
+    restart: always
+    ports:
+      - "8083:8083"
+    volumes:
+      - feedback_data:/data/db
+    depends_on:
+      - feedback-mongodb
+      - rabbitmq
+    links:
+      - feedback-mongodb
+    networks:
+      - local
+
+
+  search:
+    build:
+      context: ./SearchService
+      dockerfile: Dockerfile
+    container_name: searchService
+    restart: always
+    ports:
+      - "8084:8084"
+    depends_on:
+      - search-mongo
+    links:
+      - search-mongo
+    networks:
+      - local
+
+  notification-mongodb:
+    image: mongo:6.0.6
+    container_name: notification-mongodb
+    restart: always
+    ports:
+      - "27026:27017"
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  notification-service:
+    build:
+      context: ./NotificationService
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: always
+    ports:
+      - "8012:8012"
+    depends_on:
+      - notification-mongodb
+    links:
+      - notification-mongodb
+    networks:
+      - local
+
+  attendance-mongodb:
+    image: mongo:6.0.6
+    container_name: attendance-mongodb
+    ports:
+      - "27027:27017"
+    volumes:
+      - data:/data
+    networks:
+      - local
+
+  attendance-service:
+    build:
+      context: ./AttendanceService
+      dockerfile: Dockerfile
+    container_name: attendance-service
+    restart: always
+    ports:
+      - "8011:8011"
+    depends_on:
+      - attendance-mongodb
+    links:
+      - attendance-mongodb
+    networks:
+      - local
+
+volumes:
+  data: {}
+  feedback_data: {}
+
+networks:
+  local:
+    driver: bridge
+
+

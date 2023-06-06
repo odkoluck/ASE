@@ -1,0 +1,42 @@
+# Use a base image with Maven and Java
+FROM maven:3.8.4-openjdk-17-slim AS build
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the Maven project file
+COPY pom.xml .
+
+# Download the project dependencies
+RUN mvn dependency:go-offline -B
+
+# Copy the project source code
+COPY src ./src
+
+# Build the application
+RUN mvn package -DskipTests
+
+# Use a new base image for the application runtime
+FROM openjdk:17-jdk-slim
+
+# Set the working directory
+WORKDIR /app
+
+# Copy the built JAR file from the previous stage
+COPY --from=build /app/target/SearchService-0.0.1-SNAPSHOT.jar .
+
+# Import the MongoDB repository key
+RUN apt-get update && \
+    apt-get install -y gnupg && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv B00A0BD1E2C63C11
+
+# Add the MongoDB repository and install the MongoDB package
+RUN echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list && \
+    apt-get update && \
+    apt-get install -y mongodb-org
+
+# Expose the necessary ports
+EXPOSE 8084
+
+# Run the application
+CMD ["java", "-jar", "SearchService-0.0.1-SNAPSHOT.jar"]
